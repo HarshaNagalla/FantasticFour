@@ -1,36 +1,50 @@
 package grading;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DropFilter implements Filter {
-    private boolean shouldDropLowest;
-    private boolean shouldDropHighest;
-    
-    public DropFilter() {
-        shouldDropLowest = true;
-        shouldDropHighest = true;
-    }
-    
-    public DropFilter(boolean SDLow, boolean SDHigh) {
-        shouldDropLowest = SDLow;
-        shouldDropHighest = SDHigh;
-    }
-    
-    @Override
-    public List<Grade> apply(List<Grade> grades) throws SizeException {
-        if(grades == null) throw new SizeException();
-        if(shouldDropLowest && shouldDropHighest && grades.size() < 3) throw new SizeException();
-        if((shouldDropLowest || shouldDropHighest) && grades.size() < 2) throw new SizeException();
-        if(!shouldDropLowest && !shouldDropHighest && grades.size() < 1) throw new SizeException();
-        if(!shouldDropLowest && !shouldDropHighest) return grades;
-        Grade lo, hi;
-        lo = hi = grades.get(0);
-        for(Grade g : grades) {
-            if(g.compareTo(lo) < 0) lo = g;
-            if(g.compareTo(hi) > 0) hi = g;
-        }
-        if(shouldDropLowest) grades.remove(lo);
-        if(shouldDropHighest) grades.remove(hi);
-        return grades;
-    }
+	private boolean shouldDropHighest, shouldDropLowest;
+
+	// Default constructor
+	public DropFilter() {
+		this(true, true);
+	}
+   
+	public DropFilter(boolean shouldDropLowest, boolean shouldDropHighest) {
+		this.shouldDropLowest = shouldDropLowest;
+		this.shouldDropHighest = shouldDropHighest;
+	}
+
+	public List<Grade> apply(List<Grade> grades) throws SizeException {
+		ArrayList<Grade> result;
+
+		if ((grades == null) || (numberToDrop() >= grades.size()))
+			throw new SizeException();
+
+		result = new ArrayList<Grade>();
+		for (int i = 0; i < grades.size(); i++)
+			result.add(grades.get(i));
+		Collections.sort(result);
+
+		// Drop elements as appropriate
+		if (shouldDropLowest)
+			result.remove(0);
+		if (shouldDropHighest)
+			result.remove(result.size() - 1);
+
+		return result;
+	}
+
+	private int numberToDrop() {
+		int result = 0;
+
+		if (shouldDropLowest)
+			++result;
+		if (shouldDropHighest)
+			++result;
+
+		return result;
+	}
 }
